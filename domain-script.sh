@@ -9,9 +9,9 @@
 #   sudo ./domain-script.sh -u <upstream_name> -p <port> -d <domain> [-d <domain2> ...]
 #
 # Example:
-#   sudo ./domain-script.sh -u nyumbani -p 2300 \
-#        -d nyumbani.victormbashia.com \
-#        -d www.nyumbani.victormbashia.com
+#   sudo ./domain-script.sh -u example -p 2300 \
+#        -d example.victormbashia.com \
+#        -d www.example.victormbashia.com
 #
 # Notes:
 #   - The FIRST -d domain is treated as the primary domain (used for the
@@ -83,12 +83,10 @@ if [[ -e "$CONFIG_PATH" ]]; then
   exit 1
 fi
 
-# Build the space-separated server_name list, e.g:
-#   nyumbani.victormbashia.com www.nyumbani.victormbashia.com
+
 SERVER_NAMES="${DOMAINS[*]}"
 
-# Build the certbot -d flags, e.g:
-#   -d nyumbani.victormbashia.com -d www.nyumbani.victormbashia.com
+#
 CERTBOT_DOMAIN_FLAGS=()
 for d in "${DOMAINS[@]}"; do
   CERTBOT_DOMAIN_FLAGS+=("-d" "$d")
@@ -101,7 +99,6 @@ echo "Domains       : $SERVER_NAMES"
 echo "Config file   : $CONFIG_PATH"
 echo
 
-# ---- DNS sanity check (warn, don't block) ---------------------------------
 
 echo "Checking DNS resolution for each domain..."
 DNS_WARN=0
@@ -128,7 +125,6 @@ if [[ "$DNS_WARN" -eq 1 ]]; then
   fi
 fi
 
-# ---- Write nginx config ----------------------------------------------------
 
 echo
 echo "Writing nginx config to $CONFIG_PATH ..."
@@ -167,7 +163,6 @@ else
   echo "Symlinked into sites-enabled."
 fi
 
-# ---- Test and reload nginx -------------------------------------------------
 
 echo
 echo "Testing nginx config..."
@@ -181,7 +176,6 @@ fi
 systemctl reload nginx
 echo "nginx reloaded successfully."
 
-# ---- Run certbot ------------------------------------------------------------
 
 echo
 echo "Requesting certificate via certbot (nginx plugin)..."
