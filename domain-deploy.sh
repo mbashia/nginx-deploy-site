@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
-# domain-script.sh
+# domain-deploy.sh
 #
 # Creates an nginx reverse-proxy vhost for a Node/Phoenix/etc backend,
 # enables it, and provisions a Let's Encrypt cert with certbot.
 #
 # Usage:
-#   sudo ./domain-script.sh -u <upstream_name> -p <port> -d <domain> [-d <domain2> ...]
+#   sudo ./domain-deploy.sh -u <upstream_name> -p <port> -d <domain> [-d <domain2> ...]
 #
 # Example:
-#   sudo ./domain-script.sh -u example -p 2300 \
+#   sudo ./domain-deploy.sh -u example -p 2300 \
 #        -d example.victormbashia.com \
 #        -d www.example.victormbashia.com
 #
@@ -21,6 +21,8 @@
 
 set -euo pipefail
 
+VERSION="1.0.0"
+
 UPSTREAM=""
 PORT=""
 DOMAINS=()
@@ -31,22 +33,24 @@ usage() {
   echo "  -u   Upstream name (used internally in nginx upstream block)"
   echo "  -p   Backend port the app listens on (e.g. 4000)"
   echo "  -d   Domain to serve (repeatable; first one is primary)"
+  echo "  -v   Show version"
   echo "  -h   Show this help"
   exit 1
 }
 
-while getopts ":u:p:d:h" opt; do
+while getopts ":u:p:d:vh" opt; do
   case "$opt" in
     u) UPSTREAM="$OPTARG" ;;
     p) PORT="$OPTARG" ;;
     d) DOMAINS+=("$OPTARG") ;;
+    v) echo "domain-deploy version ${VERSION}"; exit 0 ;;
     h) usage ;;
     \?) echo "Unknown option: -$OPTARG" >&2; usage ;;
     :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
   esac
 done
 
-# ---- Validation ----------------------------------------------------------
+#Validation 
 
 if [[ -z "$UPSTREAM" || -z "$PORT" || ${#DOMAINS[@]} -eq 0 ]]; then
   echo "Error: -u, -p, and at least one -d are required." >&2
@@ -92,7 +96,7 @@ for d in "${DOMAINS[@]}"; do
   CERTBOT_DOMAIN_FLAGS+=("-d" "$d")
 done
 
-echo "== Domain setup =="
+echo "== Domain setup (domain-deploy v${VERSION}) =="
 echo "Upstream name : $UPSTREAM"
 echo "Backend port  : $PORT"
 echo "Domains       : $SERVER_NAMES"
@@ -154,7 +158,7 @@ EOF
 
 echo "Config written."
 
-# ---- Enable the site -------------------------------------------------------
+#Enable the site 
 
 if [[ -e "$ENABLED_PATH" ]]; then
   echo "Symlink already exists at $ENABLED_PATH, leaving as-is."

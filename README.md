@@ -8,6 +8,24 @@ Point it at a backend app (anything listening on `127.0.0.1:<port>` — Node,
 Phoenix/Elixir, Django, Rails, whatever) and one or more domains, and it does
 the rest.
 
+## Quickstart
+
+Install it once per server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mbashia/nginx-deploy-site/main/install.sh | sudo bash
+```
+
+Then run it from anywhere:
+
+```bash
+sudo domain-deploy -u example -p 2300 -d example.victormbashia.com
+```
+
+That's it — skip to [Usage](#usage) for the full flag reference, or
+[Installation](#installation) for other install options (specific versions,
+manual clone, etc).
+
 ## What it does
 
 1. Validates your inputs (root check, port range, required binaries present)
@@ -33,12 +51,47 @@ the rest.
   and will ask for confirmation if a record is missing, but won't create DNS
   records for you)
 
+## Installation
+
+**Recommended — installs the latest tagged release** as the `domain-deploy`
+command, available system-wide:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mbashia/nginx-deploy-site/main/install.sh | sudo bash
+```
+
+**Install a specific version**, useful for pinning across multiple servers so
+they all run identical, known-good code:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mbashia/nginx-deploy-site/main/install.sh | sudo bash -s -- v1.0.0
+```
+
+**Install straight from `main`**, if you want unreleased changes:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mbashia/nginx-deploy-site/main/install.sh | sudo bash -s -- main
+```
+
+**Manual clone**, if you'd rather not pipe a script into `sudo bash`:
+
+```bash
+git clone https://github.com/mbashia/nginx-deploy-site.git
+cd nginx-deploy-site
+chmod +x domain-deploy.sh
+sudo ./domain-deploy.sh -u <upstream_name> -p <port> -d <domain>
+```
+
+Check what's installed on a given server at any time:
+
+```bash
+domain-deploy -v
+```
+
 ## Usage
 
 ```bash
-chmod +x domain-script.sh
-
-sudo ./domain-script.sh -u <upstream_name> -p <port> -d <domain> [-d <domain2> ...]
+sudo domain-deploy -u <upstream_name> -p <port> -d <domain> [-d <domain2> ...]
 ```
 
 | Flag | Description |
@@ -46,6 +99,7 @@ sudo ./domain-script.sh -u <upstream_name> -p <port> -d <domain> [-d <domain2> .
 | `-u` | Upstream name — an internal identifier nginx uses for the backend pool |
 | `-p` | Port your app listens on locally (e.g. `4000`, `2300`) |
 | `-d` | A domain to serve. Repeatable. **The first `-d` is treated as the primary domain** and is used as the config filename and certbot cert name |
+| `-v` | Show installed version |
 | `-h` | Show usage |
 
 ### Example
@@ -54,7 +108,7 @@ Standing up `app.example.com` (with `www`) for a backend running on
 port `4000`:
 
 ```bash
-sudo ./domain-script.sh -u myapp -p 4000 \
+sudo domain-deploy -u myapp -p 4000 \
   -d app.example.com \
   -d www.app.example.com
 ```
@@ -66,7 +120,7 @@ both domains.
 ### Single-domain example
 
 ```bash
-sudo ./domain-script.sh -u blog -p 8080 -d blog.example.com
+sudo domain-deploy -u blog -p 8080 -d blog.example.com
 ```
 
 ## What the generated config looks like
@@ -118,6 +172,24 @@ this script. Verify it's working with:
 ```bash
 sudo certbot renew --dry-run
 ```
+
+## Versioning & releases
+
+`domain-deploy.sh` carries its own `VERSION` string, shown via `domain-deploy -v`.
+
+To cut a new release:
+
+1. Bump `VERSION="x.y.z"` near the top of `domain-deploy.sh`
+2. Commit the change to `main`
+3. Tag and push the tag:
+   ```bash
+   git tag v1.1.0
+   git push origin v1.1.0
+   ```
+
+`install.sh` (with no argument) automatically installs the **latest tag**, so
+servers only pick up a new version when you deliberately cut one — a bad
+commit to `main` won't break servers that installed a tagged release.
 
 ## Troubleshooting
 
